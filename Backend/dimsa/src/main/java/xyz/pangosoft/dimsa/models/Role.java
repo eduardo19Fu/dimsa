@@ -1,4 +1,4 @@
 package xyz.pangosoft.dimsa.models;
 
-public class Rol {
+public class Role {
 }

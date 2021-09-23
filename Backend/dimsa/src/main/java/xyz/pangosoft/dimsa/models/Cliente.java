@@ -1,6 +1,7 @@
 package xyz.pangosoft.dimsa.models;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -11,9 +12,14 @@ public class Cliente implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCliente;
+
+    @NotNull(message = "Nombre no puede estar vacío!")
     private String nombre;
     private String nit;
+
+    @NotNull(message = "Dirección no puede estar vacío!")
     private String direccion;
+    private String telefono;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaRegistro;
@@ -53,6 +59,14 @@ public class Cliente implements Serializable {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 
     public Date getFechaRegistro() {

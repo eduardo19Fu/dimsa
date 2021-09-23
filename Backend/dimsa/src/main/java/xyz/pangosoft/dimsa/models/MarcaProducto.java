@@ -1,5 +1,7 @@
 package xyz.pangosoft.dimsa.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +17,16 @@ public class MarcaProducto implements Serializable {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaRegistro;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    private Usuario usuario;
+
+    @PrePersist
+    public void prepersist(){
+        this.fechaRegistro = new Date();
+    }
 
     public Integer getIdMarcaProducto() {
         return idMarcaProducto;

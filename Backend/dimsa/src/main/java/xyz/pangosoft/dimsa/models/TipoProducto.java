@@ -1,5 +1,7 @@
 package xyz.pangosoft.dimsa.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
@@ -16,8 +18,13 @@ public class TipoProducto implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaRegistro;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    private Usuario usuario;
+
     @PrePersist
-    public void registro(){
+    public void prepersist(){
         this.fechaRegistro = new Date();
     }
 
@@ -43,6 +50,14 @@ public class TipoProducto implements Serializable {
 
     public void setFechaRegistro(Date fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     private static final long serialVersionUID = 1L;
