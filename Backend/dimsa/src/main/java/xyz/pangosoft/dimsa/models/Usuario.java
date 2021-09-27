@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "usuarios")
@@ -18,18 +19,19 @@ public class Usuario implements Serializable {
     private String primerNombre;
     private String segundoNombre;
     private String apellido;
+    private boolean enabled;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaRegistro;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_estado")
-    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-    private Estado estado;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "usuarios_roles", joinColumns = @JoinColumn(name = "id_usuario"), inverseJoinColumns = @JoinColumn(name = "id_role"))
+    private List<Role> roles;
 
     @PrePersist
     public void prepersist(){
         this.fechaRegistro = new Date();
+        this.enabled = true;
     }
 
     public Integer getIdUsuario() {
@@ -88,12 +90,20 @@ public class Usuario implements Serializable {
         this.fechaRegistro = fechaRegistro;
     }
 
-    public Estado getEstado() {
-        return estado;
+    public boolean getEnabled() {
+        return enabled;
     }
 
-    public void setEstado(Estado estado) {
-        this.estado = estado;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 
     private static final long serialVersionUID = 1L;

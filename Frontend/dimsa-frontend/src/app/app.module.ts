@@ -19,6 +19,12 @@ import { CreateTipoComponent } from './components/tipos-producto/create-tipo/cre
 import { CreateClienteComponent } from './components/clientes/create-cliente/create-cliente.component';
 import { ModalCreateClienteComponent } from './components/clientes/modal-create-cliente/modal-create-cliente.component';
 import { DetailProductoComponent } from './components/productos/detail-producto/detail-producto.component';
+import { FacturasComponent } from './components/facturas/facturas.component';
+import { CreateFacturaComponent } from './components/facturas/create-factura/create-factura.component';
+import { CorrelativosComponent } from './components/correlativos/correlativos.component';
+import { CreateCorrelativoComponent } from './components/correlativos/create-correlativo/create-correlativo.component';
+import { UsuariosComponent } from './components/usuarios/usuarios.component';
+import { CreateUsuarioComponent } from './components/usuarios/create-usuario/create-usuario.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +42,13 @@ import { DetailProductoComponent } from './components/productos/detail-producto/
     CreateTipoComponent,
     CreateClienteComponent,
     ModalCreateClienteComponent,
-    DetailProductoComponent
+    DetailProductoComponent,
+    FacturasComponent,
+    CreateFacturaComponent,
+    CorrelativosComponent,
+    CreateCorrelativoComponent,
+    UsuariosComponent,
+    CreateUsuarioComponent
   ],
   imports: [
     BrowserModule,

@@ -1,5 +1,7 @@
 package xyz.pangosoft.dimsa.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
@@ -10,28 +12,35 @@ public class Correlativo implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idCorrelativo;
+    private Long idCorrelativo;
     private Long correlativoInicial;
     private Long correlativoFinal;
     private Long correlativoActual;
+    private String serie;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private Estado estado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario")
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    private Usuario usuario;
 
     @PrePersist
     public void prepersist(){
         this.fechaCreacion = new Date();
     }
 
-    public Integer getIdCorrelativo() {
+    public Long getIdCorrelativo() {
         return idCorrelativo;
     }
 
-    public void setIdCorrelativo(Integer idCorrelativo) {
+    public void setIdCorrelativo(Long idCorrelativo) {
         this.idCorrelativo = idCorrelativo;
     }
 
@@ -59,6 +68,14 @@ public class Correlativo implements Serializable {
         this.correlativoActual = correlativoActual;
     }
 
+    public String getSerie() {
+        return serie;
+    }
+
+    public void setSerie(String serie) {
+        this.serie = serie;
+    }
+
     public Date getFechaCreacion() {
         return fechaCreacion;
     }
@@ -73,6 +90,14 @@ public class Correlativo implements Serializable {
 
     public void setEstado(Estado estado) {
         this.estado = estado;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     private static final long serialVersionUID = 1L;

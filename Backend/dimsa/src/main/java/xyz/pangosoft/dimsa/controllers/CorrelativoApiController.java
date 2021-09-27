@@ -1,0 +1,194 @@
+package xyz.pangosoft.dimsa.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import xyz.pangosoft.dimsa.models.Correlativo;
+import xyz.pangosoft.dimsa.models.Estado;
+import xyz.pangosoft.dimsa.models.Usuario;
+import xyz.pangosoft.dimsa.services.ICorrelativoService;
+import xyz.pangosoft.dimsa.services.IEstadoService;
+import xyz.pangosoft.dimsa.services.IUsuarioService;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@CrossOrigin(origins = {"http://localhost:4200", "*"})
+@RestController
+@RequestMapping("/api")
+public class CorrelativoApiController {
+
+    @Autowired
+    private ICorrelativoService serviceCorrelativo;
+
+    @Autowired
+    private IEstadoService serviceEstado;
+
+    @Autowired
+    private IUsuarioService serviceUsuario;
+
+    @GetMapping(value = "/correlativos")
+    public List<Correlativo> index() {
+        return serviceCorrelativo.findAll();
+    }
+
+    @GetMapping(value = "/correlativos/page/{page}")
+    public Page<Correlativo> index(@PathVariable("page") Integer page) {
+        return serviceCorrelativo.findAll(PageRequest.of(page, 5));
+    }
+
+    // @Secured(value = {"ROLE_ADMIN"})
+    @GetMapping(value = "/correlativos/{id}")
+    public ResponseEntity<?> findById(@PathVariable("id") Long id) {
+
+        Correlativo correlativo = null;
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            correlativo = serviceCorrelativo.findById(id);
+        } catch (DataAccessException e) {
+            response.put("mensaje", "¡Ha ocurrido un error en la base de datos!");
+            response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (correlativo == null) {
+            response.put("mensaje", "¡El correlativo no se encuentra registrado en la base de datos!");
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<Correlativo>(correlativo, HttpStatus.OK);
+    }
+
+    // @Secured(value = {"ROLE_COBRADOR"})
+    @GetMapping(value = "/correlativos/usuario/{id}")
+    public ResponseEntity<?> findByUsuario(@PathVariable("id") Integer idusuario){
+
+        Usuario usuario = null;
+        Correlativo correlativo = null;
+        Estado estado = null;
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            estado = serviceEstado.findById(1);
+            usuario = serviceUsuario.findById(idusuario);
+
+            if(usuario != null) {
+                correlativo = serviceCorrelativo.findByUsuario(usuario, estado);
+            }
+        } catch (DataAccessException e) {
+            response.put("mensaje", "¡Ha ocurrido un error en la base de datos!");
+            response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (correlativo == null) {
+            response.put("mensaje", "¡El correlativo no se encuentra registrado en la base de datos!");
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<Correlativo>(correlativo, HttpStatus.OK);
+    }
+
+    // @Secured(value = {"ROLE_ADMIN"})
+    @PostMapping(value = "/correlativos")
+    public ResponseEntity<?> create(@RequestBody Correlativo correlativo, BindingResult result) {
+
+        Correlativo newCorrelativo = null;
+        Estado estado = serviceEstado.findById(1);
+        Map<String, Object> response = new HashMap<>();
+
+        if (result.hasErrors()) {
+            // tratamiento de errores
+            List<String> errors = result.getFieldErrors().stream()
+                    .map(err -> "El campo '".concat(err.getField().concat("' ")).concat(err.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            response.put("errors", errors);
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        if(serviceCorrelativo.findByUsuario(correlativo.getUsuario(), estado) != null) {
+            response.put("mensaje", "¡Correlativo Activo!");
+            response.put("error", "¡El usuario ".concat(correlativo.getUsuario().getUsuario()).concat(" ya cuenta con un correlativo activo!"));
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CONFLICT);
+        }
+
+        try {
+            correlativo.setCorrelativoActual(correlativo.getCorrelativoInicial());
+            correlativo.setEstado(serviceEstado.findById(1));
+
+            newCorrelativo = serviceCorrelativo.save(correlativo);
+        } catch (DataAccessException e) {
+            response.put("mensaje", "¡Ha ocurrido un error en la base de datos!");
+            response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        response.put("mensaje", "¡Correlativo creado con éxito!");
+        response.put("correlativo", newCorrelativo);
+        return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+    }
+
+    // @Secured(value = {"ROLE_ADMIN"})
+    @PutMapping(value = "/correlativos")
+    public ResponseEntity<?> update(@RequestBody Correlativo correlativo, BindingResult result) {
+
+        Correlativo corrUpdated = null;
+        Map<String, Object> response = new HashMap<>();
+
+        if (result.hasErrors()) {
+            // tratamiento de errores
+            List<String> errors = result.getFieldErrors().stream()
+                    .map(err -> "El campo '".concat(err.getField().concat("' ")).concat(err.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            response.put("errors", errors);
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            corrUpdated = serviceCorrelativo.save(correlativo);
+        } catch (DataAccessException e) {
+            response.put("mensaje", "¡Ha ocurrido un error en la base de datos!");
+            response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        response.put("mensaje", "¡El correlativo ha sido actualizado con éxito!");
+        response.put("correlativo", corrUpdated);
+        return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
+    }
+
+    // @Secured(value = {"ROLE_ADMIN"})
+    @DeleteMapping(value = "/correlativos/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
+
+        Correlativo correlativoAnulado = null, correlativo = null;
+        Estado estado = serviceEstado.findByEstado("ANULADO");
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            correlativo = serviceCorrelativo.findById(id);
+            correlativo.setEstado(estado);
+            correlativoAnulado = serviceCorrelativo.save(correlativo);
+            // serviceCorrelativo.delete(id);
+        } catch (DataAccessException e) {
+            response.put("mensaje", "¡Ha ocurrido un error en la base de datos!");
+            response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        response.put("mensaje", "¡El correlativo ha sido eliminado con éxito!");
+        response.put("correlativo", correlativoAnulado);
+        return new ResponseEntity<Map<String, Object>>(response, HttpStatus.OK);
+    }
+}
